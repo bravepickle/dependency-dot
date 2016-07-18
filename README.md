@@ -17,7 +17,7 @@ cd dependency-dot/src
 ```
 3. Build and install
 ```bash
-go install
+go install -o depdot
 ```
 4. Check application
 ```bash
@@ -41,4 +41,7 @@ depdot -help
 
 ## Usage
 
+## TODO
+- support grouping entities according to column
+- customize output styles for entities
 
