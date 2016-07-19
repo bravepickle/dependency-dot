@@ -12,6 +12,7 @@ type Entity struct {
 	Id     string   // node id. Consists from EntityId and ReferencedId concatenated by `-`
 	Name   string   // node name
 	Style  string   // node style
+	Group  string   // node group it belongs to
 	RefIds []string // subnodes' ids
 	Refs   []Ref    // subnodes' references
 

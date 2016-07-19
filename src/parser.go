@@ -24,9 +24,9 @@ func ParseCsv(filename string, columnsToParse map[string]string) []Entity {
 		//		parsedStr := string(data)
 		parsedStr, _ := ioutil.ReadAll(file)
 		if len(parsedStr) > dbgLimit {
-			fmt.Printf("Found file contents:\n%s ...", string(parsedStr[:dbgLimit]))
+			fmt.Printf("Found file contents:\n%s ...\n\n", string(parsedStr[:dbgLimit]))
 		} else {
-			fmt.Printf("Found file contents:\n%s", string(parsedStr))
+			fmt.Printf("Found file contents:\n%s\n\n", string(parsedStr))
 		}
 
 		file.Seek(0, os.SEEK_SET) // rewind to start of file
@@ -37,7 +37,7 @@ func ParseCsv(filename string, columnsToParse map[string]string) []Entity {
 
 	entities := initEntitiesFromCsv(csvReader, colMap)
 	if Debug {
-		fmt.Println(`Parsed entities: `, entities)
+		fmt.Print(`Parsed entities: `, entities, "\n\n")
 	}
 
 	return entities
@@ -113,6 +113,8 @@ func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity 
 
 		refIds, refs := parseRefIds(record[colMap[`ref`]], record[colMap[`id`]])
 		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds, Refs: refs, Style: record[colMap[`style`]]}
+		entity.Group = strings.TrimSpace(record[colMap[`group`]])
+
 		entities = append(entities, entity)
 	}
 
@@ -124,8 +126,6 @@ func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity 
 // add entity dependencies between each other
 func addEntityDeps(entities *[]Entity) {
 	for i, entity := range *entities {
-
-		fmt.Println(`==>>`, entity.RefIds)
 		for _, refId := range entity.RefIds {
 			if refId == `` { // skip empty refIds
 				continue
@@ -141,7 +141,7 @@ func addEntityDeps(entities *[]Entity) {
 				}
 			}
 
-			if found {
+			if !found {
 				fmt.Fprintf(os.Stderr, `Failed to find reference ID "%s" for row ID "%s"%s`, refId, entity.Id, "\n")
 			}
 		}

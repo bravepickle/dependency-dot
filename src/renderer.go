@@ -4,12 +4,31 @@ package main
 
 import "bytes"
 import "fmt"
+import "sort"
 import "os"
 import "path/filepath"
+
+type byGroup []Entity
+
+func (s byGroup) Less(i, j int) bool {
+	return (s)[i].Group < (s)[j].Group
+}
+
+func (s byGroup) Len() int {
+	return len(s)
+}
+
+func (s byGroup) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
 
 // generate string in dot format from entities
 func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 	output := bytes.NewBufferString("digraph G { \n")
+
+	sort.Sort(byGroup{*entities})
+
+	fmt.Println(`RESULT`, entities)
 
 	if appendDot != `` {
 		output.WriteString(`  `) // padding

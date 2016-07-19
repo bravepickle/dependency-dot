@@ -4,4 +4,4 @@ id,name,reference,group,type,style
 3,root3,,Roots,,shape=polygon
 4,child 2,"1[dir=both,color=""red:blue""]",,child,
 5,subchild," 2 ,1[style=dotted]",,,
-6,Hello 'Mr Bromm'!,5,,,
+6,Hello 'Mr Bromm'!,5 [dir=none],,,
