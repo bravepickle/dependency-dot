@@ -7,28 +7,75 @@ import "fmt"
 import "sort"
 import "os"
 import "path/filepath"
+import "strconv"
 
-type byGroup []Entity
+const defaultPadding = `  `
 
-func (s byGroup) Less(i, j int) bool {
-	return (s)[i].Group < (s)[j].Group
+type groupEntities map[string]entityGroup
+
+type entityGroup struct {
+	Id       int
+	Name     string
+	Entities []Entity
 }
 
-func (s byGroup) Len() int {
-	return len(s)
+// check if current group is default
+func (g *entityGroup) IsDefault() bool {
+	return g.Name == `` // empty group is default one
 }
 
-func (s byGroup) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
+func (g *entityGroup) Add(e Entity) {
+	g.Entities = append(g.Entities, e)
+}
+
+func (g *entityGroup) Wrap(output *bytes.Buffer) {
+	if g.IsDefault() { // no subgraphs needed
+		addGraphNodes(&g.Entities, output, defaultPadding)
+	} else {
+		padding := defaultPadding + defaultPadding
+		output.WriteString(`  subgraph `) // padding
+		output.WriteString(`cluster`)
+		output.WriteString(strconv.Itoa(g.Id))
+		output.WriteString(" {\n")
+
+		output.WriteString(padding)
+		output.WriteString(`label = "`)
+		output.WriteString(g.Name)
+		output.WriteString(`"`)
+		output.WriteString(";\n")
+
+		output.WriteString(padding)
+		output.WriteString("color=black;\n")
+
+		output.WriteString(padding)
+		output.WriteString("style=dashed;\n")
+
+		addGraphNodes(&g.Entities, output, padding)
+		output.WriteString("  }\n")
+	}
+}
+
+func groupEntitiesArr(entities *[]Entity) (grEntities groupEntities) {
+	grEntities = make(groupEntities)
+	i := 1
+	for _, e := range *entities {
+		group, ok := grEntities[e.Group]
+		//		if _, ok := grEntities[e.Group]; !ok {
+		if !ok {
+			group = entityGroup{Name: e.Group, Id: i, Entities: []Entity{}}
+			i++
+		}
+
+		group.Add(e)
+		grEntities[e.Group] = group
+	}
+
+	return grEntities
 }
 
 // generate string in dot format from entities
 func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 	output := bytes.NewBufferString("digraph G { \n")
-
-	sort.Sort(byGroup{*entities})
-
-	fmt.Println(`RESULT`, entities)
 
 	if appendDot != `` {
 		output.WriteString(`  `) // padding
@@ -36,12 +83,23 @@ func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 		output.WriteString("\n")
 	}
 
-	for _, entity := range *entities {
-		addNode(output, entity)
-		//		fmt.Println(`Children±`, entity.Children)
+	sort.Sort(byGroup(*entities)) // sort by groups and names
+	grEntities := groupEntitiesArr(entities)
 
+	for _, group := range grEntities {
+		group.Wrap(output)
+	}
+
+	output.WriteString(`}`)
+
+	return output.String()
+}
+
+func addGraphNodes(entities *[]Entity, output *bytes.Buffer, padding string) {
+	for _, entity := range *entities {
+		addNode(output, entity, padding)
 		for _, child := range entity.Children {
-			output.WriteString(`  `) // padding
+			output.WriteString(padding) // padding
 			output.WriteString(`"`)
 			output.WriteString(entity.Name)
 			output.WriteString(`" -> `)
@@ -60,15 +118,11 @@ func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 			output.WriteString(";\n")
 		}
 	}
-
-	output.WriteString(`}`)
-
-	return output.String()
 }
 
 // add node definition
-func addNode(output *bytes.Buffer, entity Entity) {
-	output.WriteString(`  `) // padding
+func addNode(output *bytes.Buffer, entity Entity, padding string) {
+	output.WriteString(padding) // padding
 	output.WriteString(`"`)
 	output.WriteString(entity.Name)
 	output.WriteString(`"`)

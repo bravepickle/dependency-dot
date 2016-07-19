@@ -2,6 +2,8 @@
 
 package main
 
+import "strings"
+
 type Ref struct {
 	Id    string // current entity id
 	RefId string // referenced entity id
@@ -16,13 +18,11 @@ type Entity struct {
 	RefIds []string // subnodes' ids
 	Refs   []Ref    // subnodes' references
 
-	Children   []*Entity // subnodes
-	ParentNode *Entity
+	Children []*Entity // subnodes
 }
 
 // Get Ref by Referenced Entity ID. If not found, then second param will be false
 func (e *Entity) Ref(id string) (Ref, bool) {
-	//	if _, ok := colMap[colKey]; !ok {
 	for _, ref := range e.Refs {
 		if ref.RefId == id {
 			return ref, true
@@ -46,7 +46,6 @@ func (e *Entity) HasChild(entity *Entity) bool {
 func (e *Entity) AddChild(entity *Entity) bool {
 	if !e.HasChild(entity) {
 		e.Children = append(e.Children, entity)
-		entity.ParentNode = e
 
 		return true
 	} else {
@@ -54,10 +53,20 @@ func (e *Entity) AddChild(entity *Entity) bool {
 	}
 }
 
-func (e *Entity) RootNode() *Entity {
-	if e.ParentNode != nil {
-		return e.ParentNode.RootNode()
-	} else {
-		return nil
+type byGroup []Entity
+
+func (s byGroup) Less(i, j int) bool {
+	if s[i].Group == s[j].Group {
+		return strings.Compare(s[i].Name, s[j].Name) >= 0
 	}
+
+	return strings.Compare(s[i].Group, s[j].Group) >= 0
+}
+
+func (s byGroup) Len() int {
+	return len(s)
+}
+
+func (s byGroup) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }

@@ -14,14 +14,12 @@ var Debug bool
 const dbgLimit = 100
 
 func ParseCsv(filename string, columnsToParse map[string]string) []Entity {
-	//	data, err := ioutil.ReadFile(filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		panic(err)
 	}
 
 	if Debug {
-		//		parsedStr := string(data)
 		parsedStr, _ := ioutil.ReadAll(file)
 		if len(parsedStr) > dbgLimit {
 			fmt.Printf("Found file contents:\n%s ...\n\n", string(parsedStr[:dbgLimit]))

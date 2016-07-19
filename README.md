@@ -65,3 +65,7 @@ Also you can directly update dot file to adjust it to your liking (ad groups, la
 - customize output [styles](http://www.graphviz.org/content/attrs) for entities.
 - styles for references
 
+## Notes
+- ensure that CSV files are generated correctly and special symbols (doublequotes, commas etc.) are properly escaped
+- pay attention to warnings and errors during script execution
+
