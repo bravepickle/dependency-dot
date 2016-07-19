@@ -3,12 +3,9 @@
 package main
 
 import "encoding/csv"
-
 import "io/ioutil"
-
 import "io"
 import "os"
-
 import "fmt"
 import "strings"
 
@@ -16,27 +13,9 @@ var Debug bool
 
 const dbgLimit = 100
 
-type Entity struct {
-	Id     string
-	Name   string
-	RefIds []string
-
-	Children   []*Entity
-	ParentNode *Entity
-}
-
-func (e *Entity) RootNode() *Entity {
-	if e.ParentNode != nil {
-		return e.ParentNode.RootNode()
-	} else {
-		return nil
-	}
-}
-
-func ParseCsv(filename string, columnsToParse map[string]string) {
+func ParseCsv(filename string, columnsToParse map[string]string) []Entity {
 	//	data, err := ioutil.ReadFile(filename)
 	file, err := os.Open(filename)
-
 	if err != nil {
 		panic(err)
 	}
@@ -45,24 +24,35 @@ func ParseCsv(filename string, columnsToParse map[string]string) {
 		//		parsedStr := string(data)
 		parsedStr, _ := ioutil.ReadAll(file)
 		if len(parsedStr) > dbgLimit {
-			fmt.Println(`Found file contents:`, "\n", string(parsedStr[:dbgLimit]), `...`)
+			fmt.Printf("Found file contents:\n%s ...", string(parsedStr[:dbgLimit]))
 		} else {
-			fmt.Println(`Found file contents:`, "\n", string(parsedStr))
+			fmt.Printf("Found file contents:\n%s", string(parsedStr))
 		}
 
 		file.Seek(0, os.SEEK_SET) // rewind to start of file
 	}
 
 	csvReader := csv.NewReader(file)
-	//	var rows [][]string
+	colMap := initColumnMap(&columnsToParse, csvReader)
 
+	entities := initEntitiesFromCsv(csvReader, colMap)
+	if Debug {
+		fmt.Println(`Parsed entities: `, entities)
+	}
+
+	return entities
+}
+
+// init mapping of column titles and its index numbers
+// function will search for titles of columns in the first row and move pointer to second line
+func initColumnMap(columnsToParse *map[string]string, csvReader *csv.Reader) map[string]int {
 	titles, err := csvReader.Read()
 	if err == io.EOF {
 		panic(`File is empty`)
 	}
 
 	colMap := map[string]int{}
-	for colKey, colName := range columnsToParse {
+	for colKey, colName := range *columnsToParse {
 		for i, s := range titles {
 			if colName == s {
 				colMap[colKey] = i
@@ -80,7 +70,21 @@ func ParseCsv(filename string, columnsToParse map[string]string) {
 		fmt.Println(`Mapped titles and columns:`, colMap)
 	}
 
+	return colMap
+}
+
+func parseRefIds(rawValue string) []string {
+	refIds := strings.Split(rawValue, `,`)
+	for i, v := range refIds {
+		refIds[i] = strings.TrimSpace(v)
+	}
+
+	return refIds
+}
+
+func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity {
 	var entities []Entity
+
 	for {
 		record, err := csvReader.Read()
 		if err == io.EOF {
@@ -91,26 +95,31 @@ func ParseCsv(filename string, columnsToParse map[string]string) {
 			panic(err)
 		}
 
-		fmt.Println(record[colMap[`id`]])
-		//		if _, ok := record[colMap[`id`]]; ok {
-		//			panic(fmt.Sprintln(`Field not found for record:`, record))
-		//		}
-
-		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: strings.Split(record[colMap[`id`]], `,`)}
-
-		fmt.Println(entity)
-
+		refIds := parseRefIds(record[colMap[`ref`]])
+		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds}
 		entities = append(entities, entity)
-
-		//		break
 	}
 
-	// TODO: add children and root nodes. Ensure that infinite loop is not possible. Fix bug with "./parser.go:95: assignment count mismatch: 2 = 1"
-	//		rows, err := csvReader.ReadAll()
+	addEntityDeps(&entities)
 
-	//	if err != nil {
-	//		panic(err)
-	//	}
+	return entities
+}
 
-	//	fmt.Println(string(rows))
+// add entity dependencies between each other
+func addEntityDeps(entities *[]Entity) {
+	for _, entity := range *entities {
+		for _, id := range entity.RefIds {
+			found := false
+			for _, sub := range *entities {
+				if sub.Id == id {
+					entity.AddChild(&sub)
+					break
+				}
+			}
+
+			if found {
+				fmt.Fprintf(os.Stderr, `Failed to find reference ID "%s" for row ID "%s"`, id, entity.Id)
+			}
+		}
+	}
 }
