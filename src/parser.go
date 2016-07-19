@@ -73,13 +73,29 @@ func initColumnMap(columnsToParse *map[string]string, csvReader *csv.Reader) map
 	return colMap
 }
 
-func parseRefIds(rawValue string) []string {
-	refIds := strings.Split(rawValue, `,`)
+func parseRefIds(rawValue string, entityId string) (refIds []string, refs []Ref) {
+	refIds = strings.Split(rawValue, `,`)
 	for i, v := range refIds {
-		refIds[i] = strings.TrimSpace(v)
+		refId := strings.TrimSpace(v)
+
+		if refId == `` { // skip empty refs
+			continue
+		}
+
+		refPieces := strings.Split(refId, `[`)
+		refId = strings.TrimSpace(refPieces[0])
+
+		ref := Ref{Id: entityId + `-` + refId}
+
+		if len(refPieces) > 1 {
+			ref.Style = strings.TrimRight(refPieces[1], `]`)
+		}
+
+		refs = append(refs, ref)
+		refIds[i] = refId
 	}
 
-	return refIds
+	return refIds, refs
 }
 
 func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity {
@@ -95,8 +111,8 @@ func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity 
 			panic(err)
 		}
 
-		refIds := parseRefIds(record[colMap[`ref`]])
-		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds}
+		refIds, refs := parseRefIds(record[colMap[`ref`]], record[colMap[`id`]])
+		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds, Refs: refs}
 		entities = append(entities, entity)
 	}
 
@@ -107,18 +123,26 @@ func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity 
 
 // add entity dependencies between each other
 func addEntityDeps(entities *[]Entity) {
-	for _, entity := range *entities {
-		for _, id := range entity.RefIds {
+	for i, entity := range *entities {
+
+		fmt.Println(`==>>`, entity.RefIds)
+		for _, refId := range entity.RefIds {
+			if refId == `` { // skip empty refIds
+				continue
+			}
+
 			found := false
 			for _, sub := range *entities {
-				if sub.Id == id {
-					entity.AddChild(&sub)
+				if sub.Id == refId {
+					(*entities)[i].AddChild(&sub) // entity cannot be set directly
+
+					found = true
 					break
 				}
 			}
 
 			if found {
-				fmt.Fprintf(os.Stderr, `Failed to find reference ID "%s" for row ID "%s"`, id, entity.Id)
+				fmt.Fprintf(os.Stderr, `Failed to find reference ID "%s" for row ID "%s"%s`, refId, entity.Id, "\n")
 			}
 		}
 	}

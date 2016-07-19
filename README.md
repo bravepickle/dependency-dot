@@ -40,8 +40,26 @@ depdot -help
 
 
 ## Usage
+### Prerequisites
+#. CSV file' should titles at first row and named accordingly to help notes of depdot file OR flags should be passed later on to executable script (depdot)
+#. CSV file should be comma-separated and values should properly be escaped\wrapped, formatted
+#. GraphViz should be installed
+
+### Basic
+```bash
+depdot -o /tmp/out.dot test.csv
+dot -Tpng /tmp/out.dot > /tmp/out.png
+```
+Will output dot file to /tmp/out.dot and will be generated PNG file to /tmp/out.png by next command using GraphViz
+
+As an alternative one can execute
+```bash
+depdot test.csv | dot -Tpng >/tmp/out.png
+```
+
 
 ## TODO
 - support grouping entities according to column
 - customize output styles for entities
+- styles for references
 

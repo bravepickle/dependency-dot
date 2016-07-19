@@ -11,15 +11,16 @@ import (
 )
 
 var nameTitle = flag.String("n", "name", "Entity name column")
-var refTitle = flag.String("r", "reference", "Column that contains references to other entities. References must be comma-separated, e.g. '1,14,22'")
+var refTitle = flag.String("r", "reference", "Column that contains references to other entities. References must be comma-separated, e.g. '1,14,22'. Can contain dot styles wrapped by square brackets")
 var idTitle = flag.String("i", "id", "Column that contains entity IDs")
+var styleTitle = flag.String("s", "style", "Column that contains (optional) styles for nodes in dot language format without square brackets")
 var outputFile = flag.String("o", "", "Output file. If not set, then output to STDIN")
 var verbose = flag.Bool("v", false, "Increase verbosity in output")
 
 // show help info on usage and finish application
 func showHelp() {
 	fmt.Fprintln(os.Stderr, `Generate dot notation from CSV file. First row should contain column titles`)
-	fmt.Fprint(os.Stderr, os.Args[0], ` -i [ID]`, ` -r [REFS]`, ` -n [NAME]`, ` -o [OUTPUT]`, ` -v`, ` input.csv`, "\n")
+	fmt.Fprint(os.Stderr, os.Args[0], ` -i [ID]`, ` -r [REFS]`, ` -n [NAME]`, ` -o [OUTPUT]`, ` -s [STYLE]`, ` -v`, ` input.csv`, "\n")
 	flag.Usage()
 	fmt.Fprintf(os.Stderr, "\nExamples:\n  %s -i ID -r References -n Names data.csv\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "  %s -o ../test_data.dot data.csv\n", os.Args[0])
@@ -46,6 +47,6 @@ func main() {
 	if *outputFile != `` {
 		WriteToFile(*outputFile, &rendered)
 	} else {
-		fmt.Fprintln(os.Stdin, rendered)
+		fmt.Fprintln(os.Stdout, rendered)
 	}
 }
