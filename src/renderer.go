@@ -8,29 +8,20 @@ import "os"
 import "path/filepath"
 
 // generate string in dot format from entities
-func RenderViewToDotFormat(entities *[]Entity) string {
+func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 	output := bytes.NewBufferString("digraph G { \n")
 
-	//	rootNodes := getRootEntities(entities)
+	if appendDot != `` {
+		output.WriteString(`  `) // padding
+		output.WriteString(appendDot)
+		output.WriteString("\n")
+	}
 
 	for _, entity := range *entities {
-		output.WriteString(`  `) // padding
-		output.WriteString(`"`)
-		output.WriteString(entity.Name)
-		output.WriteString(`"`)
-
-		if entity.Style != `` {
-			output.WriteString(` [`)
-			output.WriteString(entity.Style)
-			output.WriteString(`]`)
-		}
-
-		output.WriteString(";\n")
-
-		fmt.Println(`Children±`, entity.Children)
+		addNode(output, entity)
+		//		fmt.Println(`Children±`, entity.Children)
 
 		for _, child := range entity.Children {
-			fmt.Println(`Child`, child.Id)
 			output.WriteString(`  `) // padding
 			output.WriteString(`"`)
 			output.WriteString(entity.Name)
@@ -38,34 +29,39 @@ func RenderViewToDotFormat(entities *[]Entity) string {
 			output.WriteString(`"`)
 			output.WriteString(child.Name)
 			output.WriteString(`"`)
+
+			ref, ok := entity.Ref(child.Id)
+
+			if ok && ref.Style != `` {
+				output.WriteString(` [`)
+				output.WriteString(ref.Style)
+				output.WriteString(`]`)
+			}
+
 			output.WriteString(";\n")
 		}
 	}
 
 	output.WriteString(`}`)
 
-	//	for _, entity := range *rootNodes {
-	//		output.WriteString(`  Hello -> `)
-	//		output.WriteString(`"`)
-	//		output.WriteString(entity.Name)
-	//		output.WriteString(`"`)
-	//		output.WriteString(";\n")
-	//	}
-
 	return output.String()
 }
 
-// get all root nodes from entities list
-//func getRootEntities(entities *[]Entity) *[]Entity {
-//	var rootNodes *[]Entity
-//	for _, entity := range *entities {
-//		if entity.ParentNode == nil {
-//			rootNodes = append(rootNodes, &entity)
-//		}
-//	}
+// add node definition
+func addNode(output *bytes.Buffer, entity Entity) {
+	output.WriteString(`  `) // padding
+	output.WriteString(`"`)
+	output.WriteString(entity.Name)
+	output.WriteString(`"`)
 
-//	return rootNodes
-//}
+	if entity.Style != `` {
+		output.WriteString(` [`)
+		output.WriteString(entity.Style)
+		output.WriteString(`]`)
+	}
+
+	output.WriteString(";\n")
+}
 
 func WriteToFile(outputFile string, rendered *string) {
 	file, err := os.Create(outputFile)

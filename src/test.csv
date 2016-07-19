@@ -1,7 +1,7 @@
 id,name,reference,group,type,style
-1,root,,Roots,,fillcolor = red
+1,root,,Roots,,"fillcolor = red,style=filled,decorate=true"
 2,child,1,,child,
-3,root3,,Roots,,
-4,child 2,"1[dir=both color=""red:blue""]",,child,
-5,subchild," 2 ,1",,,
+3,root3,,Roots,,shape=polygon
+4,child 2,"1[dir=both,color=""red:blue""]",,child,
+5,subchild," 2 ,1[style=dotted]",,,
 6,Hello 'Mr Bromm'!,5,,,

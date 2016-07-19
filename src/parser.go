@@ -85,7 +85,7 @@ func parseRefIds(rawValue string, entityId string) (refIds []string, refs []Ref)
 		refPieces := strings.Split(refId, `[`)
 		refId = strings.TrimSpace(refPieces[0])
 
-		ref := Ref{Id: entityId + `-` + refId}
+		ref := Ref{Id: entityId + `-` + refId, RefId: refId}
 
 		if len(refPieces) > 1 {
 			ref.Style = strings.TrimRight(refPieces[1], `]`)
@@ -112,7 +112,7 @@ func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity 
 		}
 
 		refIds, refs := parseRefIds(record[colMap[`ref`]], record[colMap[`id`]])
-		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds, Refs: refs}
+		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds, Refs: refs, Style: record[colMap[`style`]]}
 		entities = append(entities, entity)
 	}
 

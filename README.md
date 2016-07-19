@@ -57,9 +57,11 @@ As an alternative one can execute
 depdot test.csv | dot -Tpng >/tmp/out.png
 ```
 
+Also you can directly update dot file to adjust it to your liking (ad groups, labels, styling etc.). See GraphViz [reference](http://www.graphviz.org/pdf/dotguide.pdf) and [attributes guide](http://www.graphviz.org/content/attrs) for more info
+
 
 ## TODO
 - support grouping entities according to column
-- customize output styles for entities
+- customize output [styles](http://www.graphviz.org/content/attrs) for entities.
 - styles for references
 

@@ -3,7 +3,8 @@
 package main
 
 type Ref struct {
-	Id    string // reference id
+	Id    string // current entity id
+	RefId string // referenced entity id
 	Style string // reference style
 }
 
@@ -18,17 +19,16 @@ type Entity struct {
 	ParentNode *Entity
 }
 
-// Get Ref by index
-func (e *Entity) Ref(index int) Ref {
+// Get Ref by Referenced Entity ID. If not found, then second param will be false
+func (e *Entity) Ref(id string) (Ref, bool) {
 	//	if _, ok := colMap[colKey]; !ok {
+	for _, ref := range e.Refs {
+		if ref.RefId == id {
+			return ref, true
+		}
+	}
 
-	ref := e.Refs[index]
-	//	if ref, ok := e.Refs[index]; ok {
-	//	if ref {
-	return ref
-	//	} else {
-	//		return nil
-	//	}
+	return Ref{}, true
 }
 
 // check if child is added to list
