@@ -41,9 +41,9 @@ depdot -help
 
 ## Usage
 ### Prerequisites
-#. CSV file' should titles at first row and named accordingly to help notes of depdot file OR flags should be passed later on to executable script (depdot)
-#. CSV file should be comma-separated and values should properly be escaped\wrapped, formatted
-#. GraphViz should be installed
+1. CSV file' should titles at first row and named accordingly to help notes of depdot file OR flags should be passed later on to executable script (depdot)
+2. CSV file should be comma-separated and values should properly be escaped\wrapped, formatted
+3. GraphViz should be installed
 
 ### Basic
 ```bash
