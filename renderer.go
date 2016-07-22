@@ -17,6 +17,7 @@ type entityGroup struct {
 	Id       int
 	Name     string
 	Entities []Entity
+	Style    string
 }
 
 // check if current group is default
@@ -30,7 +31,7 @@ func (g *entityGroup) Add(e Entity) {
 
 func (g *entityGroup) Wrap(output *bytes.Buffer) {
 	if g.IsDefault() { // no subgraphs needed
-		addGraphNodes(&g.Entities, output, defaultPadding)
+		addGraphNodes(&g.Entities, output, defaultPadding, g.Style)
 	} else {
 		padding := defaultPadding + defaultPadding
 		output.WriteString(`  subgraph `) // padding
@@ -50,7 +51,7 @@ func (g *entityGroup) Wrap(output *bytes.Buffer) {
 		output.WriteString(padding)
 		output.WriteString("style=dashed;\n")
 
-		addGraphNodes(&g.Entities, output, padding)
+		addGraphNodes(&g.Entities, output, padding, g.Style)
 		output.WriteString("  }\n")
 	}
 }
@@ -74,7 +75,7 @@ func groupEntitiesArr(entities *[]Entity) (grEntities groupEntities) {
 }
 
 // generate string in dot format from entities
-func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
+func RenderViewToDotFormat(entities *[]Entity, appendDot string, appendDir string) string {
 	output := bytes.NewBufferString("digraph G { \n")
 
 	if appendDot != `` {
@@ -87,6 +88,7 @@ func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 	grEntities := groupEntitiesArr(entities)
 
 	for _, group := range grEntities {
+		group.Style = appendDir
 		group.Wrap(output)
 	}
 
@@ -95,7 +97,7 @@ func RenderViewToDotFormat(entities *[]Entity, appendDot string) string {
 	return output.String()
 }
 
-func addGraphNodes(entities *[]Entity, output *bytes.Buffer, padding string) {
+func addGraphNodes(entities *[]Entity, output *bytes.Buffer, padding string, commonStyle string) {
 	for _, entity := range *entities {
 		addNode(output, entity, padding)
 		for _, child := range entity.Children {
@@ -108,10 +110,19 @@ func addGraphNodes(entities *[]Entity, output *bytes.Buffer, padding string) {
 			output.WriteString(`"`)
 
 			ref, ok := entity.Ref(child.Id)
-
 			if ok && ref.Style != `` {
 				output.WriteString(` [`)
 				output.WriteString(ref.Style)
+
+				if commonStyle != `` {
+					output.WriteString(` `)
+					output.WriteString(commonStyle)
+				}
+
+				output.WriteString(`]`)
+			} else if commonStyle != `` {
+				output.WriteString(` [`)
+				output.WriteString(commonStyle)
 				output.WriteString(`]`)
 			}
 

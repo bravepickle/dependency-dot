@@ -17,6 +17,7 @@ var groupTitle = flag.String("g", "group", "Column that contains groups to group
 var styleTitle = flag.String("s", "style", "Column that contains (optional) styles for nodes in dot language format without square brackets")
 var outputFile = flag.String("o", "", "Output file. If not set, then output to STDIN")
 var appendDot = flag.String("a", "", "Append custom attributes to dot file, e.g. 'size =\"4,4\";nodesep=1.05;rankdir=LR;'. See dot guide for attributes definition and reference")
+var appendDir = flag.String("d", "", "Append custom arrows styling for all, e.g. 'dir=back'")
 var verbose = flag.Bool("v", false, "Increase verbosity in output")
 
 // show help info on usage and finish application
@@ -44,7 +45,7 @@ func main() {
 
 	columns := map[string]string{`id`: *idTitle, `name`: *nameTitle, `ref`: *refTitle, `style`: *styleTitle, `group`: *groupTitle}
 	entities := ParseCsv(input, columns)
-	rendered := RenderViewToDotFormat(&entities, *appendDot)
+	rendered := RenderViewToDotFormat(&entities, *appendDot, *appendDir)
 
 	if *outputFile != `` {
 		WriteToFile(*outputFile, &rendered)
