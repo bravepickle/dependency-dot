@@ -29,7 +29,7 @@ As an alternative you can just download executable binary file and just run it d
 
 ```bash
 # 1. Download file
-sudo wget https://github.com/bravepickle/dependency-dot/bin/depdot -O /usr/local/bin/depdot
+sudo wget 'https://github.com/bravepickle/dependency-dot/blob/master/bin/depdot?raw=true' -O /usr/local/bin/depdot
 
 # 2. Check application
 depdot -help
