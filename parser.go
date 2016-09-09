@@ -113,7 +113,11 @@ func initEntitiesFromCsv(csvReader *csv.Reader, colMap map[string]int) []Entity 
 		var entity = Entity{Id: record[colMap[`id`]], Name: record[colMap[`name`]], RefIds: refIds, Refs: refs, Style: record[colMap[`style`]]}
 		entity.Group = strings.TrimSpace(record[colMap[`group`]])
 
-		entities = append(entities, entity)
+		if entity.Id != `` && entity.Name != `` {
+			entities = append(entities, entity)
+		} else if Debug {
+			fmt.Println(`Skipping entity with empty id or name:`, entity)
+		}
 	}
 
 	addEntityDeps(&entities)
